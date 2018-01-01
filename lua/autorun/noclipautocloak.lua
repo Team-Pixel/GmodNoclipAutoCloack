@@ -1,12 +1,21 @@
-function cloak(e)
-  e:SetNoDraw(true)
+-- Convars
+CreateConVar('nac_adminonly','1', {FVCAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY},'Admin only get auto cloaked ?');
+-- Functions
+function NaC.cloak(e)
+	if (GetConVar('nac_adminonly'):GetBool()) then
+		if not ply:IsAdmin() || ply:IsSuperAdmin() then return end
+	end
+	e:SetNoDraw(true)
 end
-function uncloak(e)
-  e:SetNoDraw(false)
+function NaC.uncloak(e)
+	e:SetNoDraw(false)
 end
-function wpcloak(e)
+function NaC.wpcloak(e)
+	if (GetConVar('nac_adminonly'):GetBool()) then
+		if not ply:IsAdmin() || ply:IsSuperAdmin() then return end
+	end
 	if IsValid(e:GetActiveWeapon()) then
-		cloak(e:GetActiveWeapon())
+		NaC.cloak(e:GetActiveWeapon())
 	end
 	for a,b in ipairs(ents.FindByClass("physgun_beam")) do
 		if b:GetParent() == e then
@@ -14,9 +23,9 @@ function wpcloak(e)
 		end
 	end
 end
-function wpuncloak(e)
+function NaC.wpuncloak(e)
 	if IsValid(e:GetActiveWeapon()) then
-		uncloak(e:GetActiveWeapon())
+		NaC.uncloak(e:GetActiveWeapon())
 	end
 	for a,b in ipairs(ents.FindByClass("physgun_beam")) do
 		if b:GetParent() == e then
@@ -24,17 +33,17 @@ function wpuncloak(e)
 		end
 	end
 end
-function callCloak(ply, desiredNoClipState)
+function NaC.callCloak(ply, desiredNoClipState)
 	if not ply:IsValid() then return end
 	if ( desiredNoClipState ) then
-		cloak(ply)			
-		wpcloak(ply)
+		NaC.cloak(ply)			
+		NaC.wpcloak(ply)
 	else
-		uncloak(ply)			
-		wpuncloak(ply)
+		NaC.uncloak(ply)			
+		NaC.wpuncloak(ply)
 	end
 end
-hook.Add("PlayerNoClip", "isInNoClip", callCloak)
+hook.Add("PlayerNoClip", "isInNoClip", NaC.callCloak)
 -- ULX COMPATIBILITY --
 if ulx != nil then
 	------------------------------ Noclip from ULX ------------------------------
@@ -53,13 +62,13 @@ if ulx != nil then
 			else
 				if v:GetMoveType() == MOVETYPE_WALK then
 					v:SetMoveType( MOVETYPE_NOCLIP )
-					cloak(v) -- Added cloak target
-					wpcloak(v) -- Added cloak weapon's target
+					NaC.cloak(v) -- Added cloak target
+					NaC.wpcloak(v) -- Added cloak weapon's target
 					table.insert( affected_plys, v )
 				elseif v:GetMoveType() == MOVETYPE_NOCLIP then
 					v:SetMoveType( MOVETYPE_WALK )
-					uncloak(v) -- Added uncloak target
-					wpuncloak(v) -- Added uncloak weapon's target
+					NaC.uncloak(v) -- Added uncloak target
+					NaC.wpuncloak(v) -- Added uncloak weapon's target
 					table.insert( affected_plys, v )
 				else -- Ignore if they're an observer
 					ULib.tsayError( calling_ply, v:Nick() .. " can't be noclipped right now.", true )
@@ -76,16 +85,16 @@ end
 -- NOT WORKING ANYMORE
 hook.Add("PlayerSwitchWeapon", "SwitchWeapon", function(ply)
 local weapon = ply:GetActiveWeapon()
-   if(ply:GetNoDraw()) then
-    if IsValid(weapon) then
-      weapon:SetNoDraw(true)
-      if weapon:GetClass() == "weapon_physgun" then
-        for a,b in ipairs(ents.FindByClass("physgun_beam")) do
-          if b:GetParent() == ply then
-            b:SetNoDraw(true)
-          end
+    if(ply:GetNoDraw()) then
+        if IsValid(weapon) then
+        weapon:SetNoDraw(true)
+            if weapon:GetClass() == "weapon_physgun" then
+                for a,b in ipairs(ents.FindByClass("physgun_beam")) do
+                    if b:GetParent() == ply then
+                        b:SetNoDraw(true)
+                    end
+                end
+            end
         end
-      end
     end
-  end
 end)
